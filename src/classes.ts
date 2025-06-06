@@ -2,11 +2,11 @@ export class user {
 	id: string;
 	username: string;
 	title?: string;
-	timeoutDue: number;
+	timeoutDue?: number;
 	profilePicture: string;
 	isSupporter: false | true;
 
-	constructor(id: string, username: string, timeoutDue: number, profilePictire: string, isSupporter: boolean, title?: "") {
+	constructor(id: string, username: string, profilePictire: string, isSupporter: boolean, timeoutDue?: number, title?: "") {
 		this.id = id;
 		this.username = username;
 		this.timeoutDue = timeoutDue;
