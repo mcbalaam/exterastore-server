@@ -1,6 +1,7 @@
 {
   "name": "exterastoreserver",
-  "version": "1.0.50",
+  "version": "0.1",
+	"description": "Manages data for the exteraStore, providing an API",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun run --watch src/index.ts",
@@ -8,6 +9,7 @@
   },
   "dependencies": {
     "@elysiajs/bearer": "^1.3.0",
+    "@prisma/cli-init": "^0.2.0",
     "@prisma/client": "^6.9.0",
     "elysia": "latest",
     "prisma": "^6.9.0",
