@@ -1,19 +1,4 @@
-export class user {
-	id: string;
-	username: string;
-	title?: string;
-	timeoutDue?: number;
-	profilePicture: string;
-	isSupporter: false | true;
-
-	constructor(id: string, username: string, profilePictire: string, isSupporter: boolean, timeoutDue?: number, title?: "") {
-		this.id = id;
-		this.username = username;
-		this.timeoutDue = timeoutDue;
-		this.profilePicture = profilePictire;
-		this.isSupporter = isSupporter;
-	}
-}
+import { user } from "./api/users";
 
 export class pluginRelease {
 	releaseHash: string;
