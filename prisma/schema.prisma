@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -25,16 +19,26 @@ model user {
 }
 
 model exteraPlugin {
-  id          String          @id @default(uuid())
-  name        String
-  description String?
-  releases    pluginRelease[]
+  id               String          @id @default(uuid())
+  name             String
+  description      String?
+  releases         pluginRelease[]
+  forkOrigin       exteraPlugin?   @relation("PluginFork", fields: [forkOriginId], references: [id])
+  forkOriginId     String?
+  forkedPlugins    exteraPlugin[]  @relation("PluginFork")
+  stars            Int
+  reactionUpvote   Int
+  reactionDownvote Int
+  reactionHeart    Int
 }
 
 model pluginRelease {
-  id           String       @id @default(uuid())
-  releaseNotes String?
-  file         String
-  plugin       exteraPlugin @relation(fields: [pluginId], references: [id])
-  pluginId     String
+  id               String       @id @default(uuid())
+  releaseNotes     String?
+  file             String
+  plugin           exteraPlugin @relation(fields: [pluginId], references: [id])
+  pluginId         String
+  reactionUpvote   Int
+  reactionDownvote Int
+  downloads        Int
 }

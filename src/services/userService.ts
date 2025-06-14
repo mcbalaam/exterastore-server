@@ -1,7 +1,8 @@
 import prisma from '../lib/prisma';
 import { updateLogFile } from '../lib/logger';
 import Joi from 'joi';
-
+import * as bcrypt from 'bcrypt'
+import { Prisma } from '@prisma/client';
 
 class UserService {
   static usernameSchema = Joi.string().min(5).max(15);
@@ -103,6 +104,47 @@ class UserService {
 		});
 	}
 
+ async create(userData: {
+    email: string;
+    username: string;
+    password: string;
+  }) {
+    const emailValidation = UserService.emailSchema.validate(userData.email);
+    if (emailValidation.error) {
+      throw new Error(emailValidation.error.details[0].message);
+    }
+
+    const usernameValidation = UserService.usernameSchema.validate(userData.username);
+    if (usernameValidation.error) {
+      throw new Error('Username must be 5-15 characters');
+    }
+
+    try {
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+
+      const newUser = await prisma.user.create({
+        data: {
+          email: userData.email.toLowerCase(),
+          username: userData.username,
+          password: hashedPassword,
+          isSupporter: false,
+          title: 'New User',
+          description: '',
+        },
+        select: {
+          id: true,
+          email: true,
+          username: true,
+          createdAt: true
+        }
+      });
+
+      updateLogFile("generic", `Created new user: ${newUser.id}`);
+      return newUser;
+    } catch (error) {
+      updateLogFile("error", `Failed to create new user for ${userData.email}`);
+    }
+  }
 }
 
 export const userService = new UserService();
