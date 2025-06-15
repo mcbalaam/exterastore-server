@@ -1,8 +1,7 @@
 import prisma from "../lib/prisma";
 import { updateLogFile } from "../lib/logger";
 import Joi from "joi";
-import '../constants'
-import { STATUS_ERR } from "../constants";
+import { STATUS_ERR, STATUS_INVALID_DESCRIPTION, STATUS_INVALID_NAME } from "../constants";
 
 class PluginService {
   static nameSchema = Joi.string().min(5).max(15);
@@ -13,13 +12,17 @@ class PluginService {
   async createPlugin(name: string, description?: string) {
     try {
       const { error } = PluginService.nameSchema.validate(name);
-      if (error) throw new Error(`Invalid plugin name: ${error.message}`);
+      if (error) {
+				updateLogFile("error", `Invalid plugin name: ${error.message}`);
+				return STATUS_INVALID_NAME;
+			}
 
       if (description) {
         const descError =
           PluginService.descriptionSchema.validate(description).error;
         if (descError)
-          throw new Error(`Invalid description: ${descError.message}`);
+          updateLogFile("error", `Invalid description: ${descError.message}`);
+					return STATUS_INVALID_DESCRIPTION;
       }
 
       const plugin = await prisma.exteraPlugin.create({
@@ -32,8 +35,8 @@ class PluginService {
       updateLogFile("generic", `Created new plugin: ${plugin.id}`);
       return plugin;
     } catch (error) {
-      console.error("Plugin creation error:", error);
-      throw error;
+      updateLogFile("error", `Something went wrong while creating a new plugin! ${error}`);
+      return STATUS_ERR;
     }
   }
 
@@ -116,7 +119,6 @@ class PluginService {
 
   async updatePlugin(pluginId: string, name?: string, description?: string) {
     try {
-      // Создаём объект для обновления
       const updateData: Record<string, any> = {};
 
       if (name) {
