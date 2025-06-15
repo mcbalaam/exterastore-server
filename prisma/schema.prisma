@@ -9,8 +9,8 @@ datasource db {
 }
 
 model user {
-  id             String  @id @default(uuid())
-  username       String  @unique
+  id             String   @id @default(uuid())
+  username       String   @unique
   email          String
   title          String?
   timeoutDue     Int?
@@ -20,32 +20,32 @@ model user {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   preferences    Json?
-  status         String  @default("active")
-	targetPlatform String[]
+  status         String   @default("active")
 }
 
 model exteraPlugin {
-  id           String         @id @default(uuid())
-  name         String
-  description  String?
-  releases     pluginRelease[]
-  forkOrigin   exteraPlugin?  @relation("PluginFork", fields: [forkOriginId], references: [id])
-  forkOriginId String?
-  forkedPlugins exteraPlugin[] @relation("PluginFork")
-  stars        String[]
-  reactions    Json           @default("{}")
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id             String          @id @default(uuid())
+  name           String
+  description    String?
+  releases       pluginRelease[]
+  forkOrigin     exteraPlugin?   @relation("PluginFork", fields: [forkOriginId], references: [id])
+  forkOriginId   String?
+  forkedPlugins  exteraPlugin[]  @relation("PluginFork")
+  stars          String[]
+  reactions      Json            @default("{}")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  targetPlatform String[]
 }
 
 model pluginRelease {
-  id          String       @id @default(uuid())
+  id           String       @id @default(uuid())
   releaseNotes String?
-  file        String
-  plugin      exteraPlugin @relation(fields: [pluginId], references: [id])
-  pluginId    String
-  reactions   Json         @default("{}")
-  downloads   Int
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  file         String
+  plugin       exteraPlugin @relation(fields: [pluginId], references: [id])
+  pluginId     String
+  reactions    Json         @default("{}")
+  downloads    Int
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 }
