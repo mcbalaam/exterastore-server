@@ -1,26 +1,32 @@
 import { Elysia } from "elysia";
 import { bearer } from '@elysiajs/bearer'
-import { updateLogFile, start, clearSession } from "./lib/logger";
+import { loggerSession } from "./lib/logger";
+
+const shouldLog: boolean = !process.argv.slice(3).includes('--no-logs');
+const LOGGER_SESSION = new loggerSession(shouldLog);
+export default LOGGER_SESSION;
 
 const app = new Elysia()
 	.use(bearer())
-	.get("/", () => "Hello Elysia")
-	.get(`/api/v1/:s1`, (ctx) => { // может быть plugins, users, stats
-		const { s1 } = ctx.params; // Получаем параметр s1
-		return `api with s1: ${s1}`;
+	.get(`/api/v1`, () => {
+		return {motd: 'Hello from exteraStore :KakkoiWave:', lastUpdated: '16.06.25'}
+	})
+	.get(`/api/v1/:s1/:s2`, (ctx) => {
+		const { s1, s2 } = ctx.params; 
+		return `${s1}, ${s2}`;
+	})
+	.get(`/api/v1/:s1/:s2`, (ctx) => {
+		const { s1, s2 } = ctx.params; 
+		return `${s1}, ${s2}`;
 	})
 	.listen(3000);
 
-start()
-
-
-updateLogFile("generic", `Server started at ${app.server?.hostname}:${app.server?.port}`)
+LOGGER_SESSION.log("generic", `Server started at ${app.server?.hostname}:${app.server?.port}`)
 
 console.log(`[INIT] Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
 
 process.on('SIGINT', () => {
   console.log('\n[INFO] The server is halting...');
-	updateLogFile("generic", `Server halted.`)
-  clearSession();
+	LOGGER_SESSION.log("generic", `Server halted.`)
   process.exit(0);
 });

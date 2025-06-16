@@ -1,7 +1,11 @@
 import prisma from "../lib/prisma";
-import { updateLogFile } from "../lib/logger";
+import LOGGER_SESSION from "..";
 import Joi from "joi";
-import { STATUS_ERR, STATUS_INVALID_DESCRIPTION, STATUS_INVALID_NAME } from "../constants";
+import {
+  STATUS_ERR,
+  STATUS_INVALID_DESCRIPTION,
+  STATUS_INVALID_NAME,
+} from "../constants";
 
 class PluginService {
   static nameSchema = Joi.string().min(5).max(15);
@@ -13,16 +17,16 @@ class PluginService {
     try {
       const { error } = PluginService.nameSchema.validate(name);
       if (error) {
-				updateLogFile("error", `Invalid plugin name: ${error.message}`);
-				return STATUS_INVALID_NAME;
-			}
+        LOGGER_SESSION.log("error", `Invalid plugin name: ${error.message}`);
+        return STATUS_INVALID_NAME;
+      }
 
       if (description) {
         const descError =
           PluginService.descriptionSchema.validate(description).error;
         if (descError)
-          updateLogFile("error", `Invalid description: ${descError.message}`);
-					return STATUS_INVALID_DESCRIPTION;
+          LOGGER_SESSION.log("error", `Invalid description: ${descError.message}`);
+        return STATUS_INVALID_DESCRIPTION;
       }
 
       const plugin = await prisma.exteraPlugin.create({
@@ -32,10 +36,13 @@ class PluginService {
         },
       });
 
-      updateLogFile("generic", `Created new plugin: ${plugin.id}`);
+      LOGGER_SESSION.log("generic", `Created new plugin: ${plugin.id}`);
       return plugin;
     } catch (error) {
-      updateLogFile("error", `Something went wrong while creating a new plugin! ${error}`);
+      LOGGER_SESSION.log(
+        "error",
+        `Something went wrong while creating a new plugin! ${error}`
+      );
       return STATUS_ERR;
     }
   }
@@ -70,7 +77,7 @@ class PluginService {
         },
       });
 
-      updateLogFile(
+      LOGGER_SESSION.log(
         "generic",
         `Created new release for plugin ${pluginId}: ${release.id}`
       );
@@ -142,7 +149,7 @@ class PluginService {
         data: updateData,
       });
 
-      updateLogFile("generic", `Updated plugin ${pluginId}`);
+      LOGGER_SESSION.log("generic", `Updated plugin ${pluginId}`);
       return updatedPlugin;
     } catch (error) {
       console.error("Plugin update error:", error);
@@ -161,7 +168,7 @@ class PluginService {
         where: { id: pluginId },
       });
 
-      updateLogFile("generic", `Deleted plugin ${pluginId}`);
+      LOGGER_SESSION.log("generic", `Deleted plugin ${pluginId}`);
       return deletedPlugin;
     } catch (error) {
       console.error("Plugin deletion error:", error);
@@ -179,8 +186,8 @@ class PluginService {
       });
 
       if (!release) {
-        updateLogFile("error", `Non-existent releaseId request: ${releaseId}`);
-				return STATUS_ERR
+        LOGGER_SESSION.log("error", `Non-existent releaseId request: ${releaseId}`);
+        return STATUS_ERR;
       }
 
       return release;
@@ -190,10 +197,14 @@ class PluginService {
     }
   }
 
-	async getAllReleasesForPlugin(pluginId: string) {
+  async getAllReleasesForPlugin(pluginId: string) {
     try {
       const releases = await prisma.pluginRelease.findMany({
-        where: { plugin: await prisma.exteraPlugin.findUnique({where: {id: pluginId}}) },
+        where: {
+          plugin: await prisma.exteraPlugin.findUnique({
+            where: { id: pluginId },
+          }),
+        },
         include: {
           pluginRelease: true,
         },
@@ -201,7 +212,7 @@ class PluginService {
 
       return releases;
     } catch (error) {
-      updateLogFile("error", `Couldn't fetch releases for ${pluginId}`);
+      LOGGER_SESSION.log("error", `Couldn't fetch releases for ${pluginId}`);
       throw error;
     }
   }
@@ -212,7 +223,7 @@ class PluginService {
         where: { id: releaseId },
       });
 
-      updateLogFile("generic", `Deleted release ${releaseId}`);
+      LOGGER_SESSION.log("generic", `Deleted release ${releaseId}`);
       return deletedRelease;
     } catch (error) {
       console.error("Release deletion error:", error);

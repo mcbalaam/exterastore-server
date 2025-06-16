@@ -1,8 +1,8 @@
-import prisma from '../lib/prisma';
-import { updateLogFile } from '../lib/logger';
-import Joi from 'joi';
-import * as bcrypt from 'bcrypt'
-import { Prisma } from '@prisma/client';
+import prisma from "../lib/prisma";
+import { updateLogFile } from "../lib/logger";
+import Joi from "joi";
+import * as bcrypt from "bcrypt";
+import { Prisma } from "@prisma/client";
 
 class UserService {
   static usernameSchema = Joi.string().min(5).max(15);
@@ -14,28 +14,31 @@ class UserService {
     .required()
     .lowercase()
     .messages({
-      'string.email': 'Please provide a valid email address',
-      'string.empty': 'Email is required'
+      "string.email": "Please provide a valid email address",
+      "string.empty": "Email is required",
     });
 
   // Updating the username
   async updateUsername(userId: string, newUsername: string) {
     const { error } = UserService.usernameSchema.validate(newUsername);
-    if (error) throw new Error('Invalid username');
-    
+    if (error) throw new Error("Invalid username");
+
     try {
       await prisma.user.update({
         where: { id: userId },
         data: { username: newUsername },
       });
-      updateLogFile("generic", `Updated username for ${userId}: ${newUsername}`);
+      updateLogFile(
+        "generic",
+        `Updated username for ${userId}: ${newUsername}`
+      );
     } catch (error) {
-      console.error('Username update error:', error);
+      console.error("Username update error:", error);
       throw error;
     }
   }
 
-	// Updating the title
+  // Updating the title
   async entitle(userId: string, newTitle: string) {
     try {
       await prisma.user.update({
@@ -44,7 +47,7 @@ class UserService {
       });
       updateLogFile("generic", `Updated title for ${userId}: ${newTitle}`);
     } catch (error) {
-      console.error('Entitle error:', error);
+      console.error("Entitle error:", error);
       throw error;
     }
   }
@@ -58,7 +61,7 @@ class UserService {
       });
       updateLogFile("generic", `Updated description for ${userId}`);
     } catch (error) {
-      console.error('Description update error:', error);
+      console.error("Description update error:", error);
       throw error;
     }
   }
@@ -72,7 +75,7 @@ class UserService {
       });
       updateLogFile("generic", `Toggled supporter for ${userId}: ${status}`);
     } catch (error) {
-      console.error('Supporter toggle error:', error);
+      console.error("Supporter toggle error:", error);
       throw error;
     }
   }
@@ -85,26 +88,26 @@ class UserService {
       });
       updateLogFile("generic", `Removed user: ${userId}`);
     } catch (error) {
-      console.error('Remove user error:', error);
+      console.error("Remove user error:", error);
       throw error;
     }
   }
 
-	async updateProfile(
-		userId: string, 
-		updates: {
-			username?: string;
-			description?: string;
-			profilePicture?: string;
-		}
-	) {
-		await prisma.user.update({
-			where: { id: userId },
-			data: { ...updates },
-		});
-	}
+  async updateProfile(
+    userId: string,
+    updates: {
+      username?: string;
+      description?: string;
+      profilePicture?: string;
+    }
+  ) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { ...updates },
+    });
+  }
 
- async create(userData: {
+  async create(userData: {
     email: string;
     username: string;
     password: string;
@@ -114,9 +117,11 @@ class UserService {
       throw new Error(emailValidation.error.details[0].message);
     }
 
-    const usernameValidation = UserService.usernameSchema.validate(userData.username);
+    const usernameValidation = UserService.usernameSchema.validate(
+      userData.username
+    );
     if (usernameValidation.error) {
-      throw new Error('Username must be 5-15 characters');
+      throw new Error("Username must be 5-15 characters");
     }
 
     try {
@@ -128,15 +133,15 @@ class UserService {
           username: userData.username,
           password: hashedPassword,
           isSupporter: false,
-          title: 'New User',
-          description: '',
+          title: "New User",
+          description: "",
         },
         select: {
           id: true,
           email: true,
           username: true,
-          createdAt: true
-        }
+          createdAt: true,
+        },
       });
 
       updateLogFile("generic", `Created new user: ${newUser.id}`);
