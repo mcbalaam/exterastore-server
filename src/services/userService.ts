@@ -1,8 +1,7 @@
 import prisma from "../lib/prisma";
-import { updateLogFile } from "../lib/logger";
 import Joi from "joi";
 import * as bcrypt from "bcrypt";
-import { Prisma } from "@prisma/client";
+import LOGGER_SESSION from "..";
 
 class UserService {
   static usernameSchema = Joi.string().min(5).max(15);
@@ -28,7 +27,7 @@ class UserService {
         where: { id: userId },
         data: { username: newUsername },
       });
-      updateLogFile(
+      LOGGER_SESSION.log(
         "generic",
         `Updated username for ${userId}: ${newUsername}`
       );
@@ -45,7 +44,7 @@ class UserService {
         where: { id: userId },
         data: { title: newTitle },
       });
-      updateLogFile("generic", `Updated title for ${userId}: ${newTitle}`);
+      LOGGER_SESSION.log("generic", `Updated title for ${userId}: ${newTitle}`);
     } catch (error) {
       console.error("Entitle error:", error);
       throw error;
@@ -59,7 +58,7 @@ class UserService {
         where: { id: userId },
         data: { description: newDescription },
       });
-      updateLogFile("generic", `Updated description for ${userId}`);
+      LOGGER_SESSION.log("generic", `Updated description for ${userId}`);
     } catch (error) {
       console.error("Description update error:", error);
       throw error;
@@ -73,7 +72,7 @@ class UserService {
         where: { id: userId },
         data: { isSupporter: status },
       });
-      updateLogFile("generic", `Toggled supporter for ${userId}: ${status}`);
+      LOGGER_SESSION.log("generic", `Toggled supporter for ${userId}: ${status}`);
     } catch (error) {
       console.error("Supporter toggle error:", error);
       throw error;
@@ -86,7 +85,7 @@ class UserService {
       await prisma.user.delete({
         where: { id: userId },
       });
-      updateLogFile("generic", `Removed user: ${userId}`);
+      LOGGER_SESSION.log("generic", `Removed user: ${userId}`);
     } catch (error) {
       console.error("Remove user error:", error);
       throw error;
@@ -144,10 +143,10 @@ class UserService {
         },
       });
 
-      updateLogFile("generic", `Created new user: ${newUser.id}`);
+      LOGGER_SESSION.log("generic", `Created new user: ${newUser.id}`);
       return newUser;
     } catch (error) {
-      updateLogFile("error", `Failed to create new user for ${userData.email}`);
+      LOGGER_SESSION.log("error", `Failed to create new user for ${userData.email}`);
     }
   }
 }

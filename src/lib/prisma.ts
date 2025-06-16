@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
-import { updateLogFile } from './logger';
+import LOGGER_SESSION from '..';
 
 const prisma = new PrismaClient();
-updateLogFile("generic", "Connected to remote database")
+LOGGER_SESSION.log("generic", "Connected to remote database")
 export default prisma;
