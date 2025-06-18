@@ -1,6 +1,9 @@
 import { Elysia } from "elysia";
 import { bearer } from '@elysiajs/bearer'
 import { loggerSession } from "./lib/logger";
+// import handleApiRequest from "./api/master";
+
+export const STARTED_AT: number = Date.now()
 
 const shouldLog: boolean = !process.argv.slice(3).includes('--no-logs');
 const LOGGER_SESSION = new loggerSession(shouldLog);
@@ -11,13 +14,10 @@ const app = new Elysia()
 	.get(`/api/v1`, () => {
 		return {motd: 'Hello from exteraStore :KakkoiWave:', lastUpdated: '16.06.25'}
 	})
-	.get(`/api/v1/:s1/:s2`, (ctx) => {
-		const { s1, s2 } = ctx.params; 
-		return `${s1}, ${s2}`;
-	})
-	.get(`/api/v1/:s1/:s2`, (ctx) => {
-		const { s1, s2 } = ctx.params; 
-		return `${s1}, ${s2}`;
+	.get('/api/v1/*', (ctx) => {
+		const raw = ctx.params['*'];
+		const args = raw ? raw.split('/') : [];
+		// return handleApiRequest(...args);
 	})
 	.listen(3000);
 

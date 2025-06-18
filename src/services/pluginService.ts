@@ -25,7 +25,10 @@ class PluginService {
         const descError =
           PluginService.descriptionSchema.validate(description).error;
         if (descError)
-          LOGGER_SESSION.log("error", `Invalid description: ${descError.message}`);
+          LOGGER_SESSION.log(
+            "error",
+            `Invalid description: ${descError.message}`
+          );
         return STATUS_INVALID_DESCRIPTION;
       }
 
@@ -115,9 +118,61 @@ class PluginService {
           releases: true,
         },
         orderBy: {
+          createdAt: "desc",
+        },
+      });
+    } catch (error) {
+      console.error("Plugins fetch error:", error);
+      throw error;
+    }
+  }
+
+async getLatestReleaseForPluginId(pluginId: string) {
+  try {
+    const release = await prisma.pluginRelease.findFirst({
+      where: { pluginId },
+      orderBy: { createdAt: 'desc' },
+      include: { file: true },
+    });
+
+    if (!release) {
+      LOGGER_SESSION.log(
+        "error",
+        `No releases for the following plugin ID: ${pluginId}`
+      );
+      return STATUS_ERR;
+    }
+
+    return release;
+  } catch (error) {
+    console.error("Release fetch error:", error);
+    throw error;
+  }
+}
+
+
+  async getAllPluginNames() {
+    try {
+      return await prisma.exteraPlugin.findMany({
+        select: {
+          name: true,
+        },
+        orderBy: {
           name: "asc",
         },
       });
+    } catch (error) {
+      console.error("Plugins fetch error:", error);
+      throw error;
+    }
+  }
+
+  async countStuff() {
+    try {
+      return {
+        plugins: prisma.exteraPlugin.count(),
+				releases: prisma.pluginRelease.count()
+      };
     } catch (error) {
       console.error("Plugins fetch error:", error);
       throw error;
@@ -186,7 +241,10 @@ class PluginService {
       });
 
       if (!release) {
-        LOGGER_SESSION.log("error", `Non-existent releaseId request: ${releaseId}`);
+        LOGGER_SESSION.log(
+          "error",
+          `Non-existent releaseId request: ${releaseId}`
+        );
         return STATUS_ERR;
       }
 
@@ -227,6 +285,22 @@ class PluginService {
       return deletedRelease;
     } catch (error) {
       console.error("Release deletion error:", error);
+      throw error;
+    }
+  }
+
+	  async getReactions(pluginId: string) {
+    try {
+      const reactions = await prisma.pluginRelease.findFirst({
+        where: { pluginId },
+				include: {
+					reactions: true
+				}
+      });
+
+      return reactions;
+    } catch (error) {
+      console.error("Error fetching reactions:", error);
       throw error;
     }
   }

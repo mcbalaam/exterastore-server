@@ -3,7 +3,7 @@ import Joi from "joi";
 import * as bcrypt from "bcrypt";
 import LOGGER_SESSION from "..";
 
-class UserService {
+export default class UserService {
   static usernameSchema = Joi.string().min(5).max(15);
   static descriptionSchema = Joi.string().min(0).max(50);
   static emailSchema = Joi.string()
