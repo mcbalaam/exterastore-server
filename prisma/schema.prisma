@@ -9,18 +9,19 @@ datasource db {
 }
 
 model user {
-  id             String   @id @default(uuid())
-  username       String   @unique
+  id             String        @id @default(uuid())
+  username       String        @unique
   email          String
   title          String?
   timeoutDue     Int?
   profilePicture String
   isSupporter    Boolean
   passwordHash   String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
   preferences    Json?
-  status         String   @default("active")
+  
+  stars          pluginStars[]
 }
 
 model exteraPlugin {
@@ -28,12 +29,16 @@ model exteraPlugin {
   name           String
   description    String?
   forkOriginId   String?
-  stars          String[]
   reactions      Json            @default("{}")
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   targetPlatform String[]
-  tags           String[]
+  tags           Json            @default("{}")
+  
+  releases       pluginRelease[]
+  stars          pluginStars[]
+  forkOrigin     exteraPlugin?   @relation("PluginFork", fields: [forkOriginId], references: [id])
+  forks          exteraPlugin[]  @relation("PluginFork")
 }
 
 model pluginRelease {
@@ -46,9 +51,16 @@ model pluginRelease {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   releaseHash  String       @unique
+  
+  plugin       exteraPlugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
 }
 
 model pluginStars {
-  userId   String @id
+  userId   String
   pluginId String
+  
+  user     user         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plugin   exteraPlugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  
+  @@id([userId, pluginId])
 }
