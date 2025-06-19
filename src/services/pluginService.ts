@@ -6,6 +6,7 @@ import {
   STATUS_INVALID_DESCRIPTION,
   STATUS_INVALID_NAME,
 } from "../constants";
+import { plugin } from "bun";
 
 class PluginService {
   static nameSchema = Joi.string().min(5).max(15);
@@ -53,17 +54,16 @@ class PluginService {
   async createRelease(
     pluginId: string,
     fileReference: string,
+    releaseHash: string,
     releaseNotes?: string
   ) {
     try {
-      // Validating release notes if provided
       if (releaseNotes) {
         const { error } =
           PluginService.releaseNotesSchema.validate(releaseNotes);
         if (error) throw new Error(`Invalid release notes: ${error.message}`);
       }
 
-      // Check if plugin exists
       const plugin = await prisma.exteraPlugin.findUnique({
         where: { id: pluginId },
       });
@@ -77,16 +77,18 @@ class PluginService {
           releaseNotes,
           file: fileReference,
           pluginId,
+          releaseHash,
+          downloads: 0,
         },
       });
 
       LOGGER_SESSION.log(
         "generic",
-        `Created new release for plugin ${pluginId}: ${release.id}`
+        `Uploaded new release for plugin ${pluginId}: ${release.id}`
       );
       return release;
     } catch (error) {
-      console.error("Release creation error:", error);
+      LOGGER_SESSION.log("error", `Unable to create new release for plugin ID ${pluginId}: ${error}`);
       throw error;
     }
   }
@@ -95,9 +97,6 @@ class PluginService {
     try {
       const plugin = await prisma.exteraPlugin.findUnique({
         where: { id: pluginId },
-        include: {
-          releases: true,
-        },
       });
 
       if (!plugin) {
@@ -106,7 +105,7 @@ class PluginService {
 
       return plugin;
     } catch (error) {
-      console.error("Plugin fetch error:", error);
+      LOGGER_SESSION.log("error", `Unable to fetch plugin ID ${pluginId}: ${error}`);
       throw error;
     }
   }
@@ -122,34 +121,32 @@ class PluginService {
         },
       });
     } catch (error) {
-      console.error("Plugins fetch error:", error);
+      LOGGER_SESSION.log("error", `Unable to fetch all plugins: ${error}`);
       throw error;
     }
   }
 
-async getLatestReleaseForPluginId(pluginId: string) {
-  try {
-    const release = await prisma.pluginRelease.findFirst({
-      where: { pluginId },
-      orderBy: { createdAt: 'desc' },
-      include: { file: true },
-    });
+  async getLatestReleaseForPluginId(pluginId: string) {
+    try {
+      const release = await prisma.pluginRelease.findFirst({
+        where: { pluginId },
+        orderBy: { createdAt: "desc" },
+      });
 
-    if (!release) {
-      LOGGER_SESSION.log(
-        "error",
-        `No releases for the following plugin ID: ${pluginId}`
-      );
-      return STATUS_ERR;
+      if (!release) {
+        LOGGER_SESSION.log(
+          "error",
+          `No releases for the following plugin ID: ${pluginId}`
+        );
+        return STATUS_ERR;
+      }
+
+      return release;
+    } catch (error) {
+      LOGGER_SESSION.log("error", `Unable to fetch latest release for plugin ID ${pluginId}: ${error}`);
+      throw error;
     }
-
-    return release;
-  } catch (error) {
-    console.error("Release fetch error:", error);
-    throw error;
   }
-}
-
 
   async getAllPluginNames() {
     try {
@@ -162,7 +159,7 @@ async getLatestReleaseForPluginId(pluginId: string) {
         },
       });
     } catch (error) {
-      console.error("Plugins fetch error:", error);
+      LOGGER_SESSION.log("error", `Unable to fetch all plugin names: ${error}`);
       throw error;
     }
   }
@@ -170,11 +167,11 @@ async getLatestReleaseForPluginId(pluginId: string) {
   async countStuff() {
     try {
       return {
-        plugins: prisma.exteraPlugin.count(),
-				releases: prisma.pluginRelease.count()
+        plugins: await prisma.exteraPlugin.count(),
+        releases: await prisma.pluginRelease.count(),
       };
     } catch (error) {
-      console.error("Plugins fetch error:", error);
+      LOGGER_SESSION.log("error", `Unable to count plugins and releases: ${error}`);
       throw error;
     }
   }
@@ -207,14 +204,13 @@ async getLatestReleaseForPluginId(pluginId: string) {
       LOGGER_SESSION.log("generic", `Updated plugin ${pluginId}`);
       return updatedPlugin;
     } catch (error) {
-      console.error("Plugin update error:", error);
+      LOGGER_SESSION.log("error", `Unable to update plugin data: ${error}`);
       throw error;
     }
   }
 
   async deletePlugin(pluginId: string) {
     try {
-      // First delete all releases to maintain referential integrity
       await prisma.pluginRelease.deleteMany({
         where: { pluginId },
       });
@@ -226,7 +222,7 @@ async getLatestReleaseForPluginId(pluginId: string) {
       LOGGER_SESSION.log("generic", `Deleted plugin ${pluginId}`);
       return deletedPlugin;
     } catch (error) {
-      console.error("Plugin deletion error:", error);
+      LOGGER_SESSION.log("error", `Unable to delete plugin for plugin ID ${pluginId}: ${error}`);
       throw error;
     }
   }
@@ -241,16 +237,13 @@ async getLatestReleaseForPluginId(pluginId: string) {
       });
 
       if (!release) {
-        LOGGER_SESSION.log(
-          "error",
-          `Non-existent releaseId request: ${releaseId}`
-        );
+        LOGGER_SESSION.log("error", `Non-existent releaseId request: ${releaseId}`);
         return STATUS_ERR;
       }
 
       return release;
     } catch (error) {
-      console.error("Release fetch error:", error);
+      LOGGER_SESSION.log("error", `Release fetch error: ${error}`);
       throw error;
     }
   }
@@ -259,12 +252,7 @@ async getLatestReleaseForPluginId(pluginId: string) {
     try {
       const releases = await prisma.pluginRelease.findMany({
         where: {
-          plugin: await prisma.exteraPlugin.findUnique({
-            where: { id: pluginId },
-          }),
-        },
-        include: {
-          pluginRelease: true,
+          pluginId: pluginId,
         },
       });
 
@@ -289,18 +277,51 @@ async getLatestReleaseForPluginId(pluginId: string) {
     }
   }
 
-	  async getReactions(pluginId: string) {
+  async getReactions(pluginId: string) {
     try {
-      const reactions = await prisma.pluginRelease.findFirst({
-        where: { pluginId },
-				include: {
-					reactions: true
-				}
+      const plugin = await prisma.exteraPlugin.findUnique({
+        where: { id: pluginId },
+        select: {
+          reactions: true,
+        },
       });
 
-      return reactions;
+      if (!plugin) {
+        throw new Error(`Plugin with ID ${pluginId} not found`);
+      }
+
+      return plugin.reactions;
     } catch (error) {
       console.error("Error fetching reactions:", error);
+      throw error;
+    }
+  }
+
+  async getPluginStars(pluginId: string) {
+    try {
+      const starsCount = await prisma.pluginStars.count({
+        where: { pluginId },
+      });
+
+      return starsCount;
+    } catch (error) {
+      console.error("Error fetching plugin stars:", error);
+      throw error;
+    }
+  }
+
+  async addPluginStar(userId: string, pluginId: string) {
+    try {
+      const star = await prisma.pluginStars.create({
+        data: {
+          userId,
+          pluginId,
+        },
+      });
+
+      return star;
+    } catch (error) {
+      console.error("Error adding plugin star:", error);
       throw error;
     }
   }
