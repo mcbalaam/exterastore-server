@@ -13,6 +13,7 @@ model user {
   username       String        @unique
   email          String
   title          String?
+	bio 					 String?
   timeoutDue     Int?
   profilePicture String
   isSupporter    Boolean
