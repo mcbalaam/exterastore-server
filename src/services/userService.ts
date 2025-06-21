@@ -3,7 +3,7 @@ import Joi from "joi";
 import * as bcrypt from "bcrypt";
 import LOGGER_SESSION from "..";
 
-export default class UserService {
+class UserService {
   static usernameSchema = Joi.string().min(5).max(15);
   static titleSchema = Joi.string().min(0).max(50);
   static bioSchema = Joi.string().min(0).max(150);
@@ -307,4 +307,4 @@ export default class UserService {
   }
 }
 
-export const userService = new UserService();
+export default new UserService();

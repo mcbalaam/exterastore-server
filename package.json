@@ -15,6 +15,7 @@
     "elysia": "latest",
     "joi": "^17.13.3",
     "prisma": "^6.9.0",
+    "ts-pattern": "^5.7.1",
     "what-the-pack": "^2.0.3"
   },
   "devDependencies": {
