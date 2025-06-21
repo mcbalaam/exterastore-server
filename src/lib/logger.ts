@@ -20,14 +20,18 @@ export class loggerSession {
     );
 		this.shouldLog = shouldLog;
 
-    try {
-      fs.writeFileSync(this.logfilePath, "", { encoding: "utf8" });
-      console.log(
-        `[LOGS] Created new log file for this session ➜  ${this.logfilePath}`
-      );
-    } catch (err) {
-      console.error("[LOGS] Could not create new log file:", err);
-    }
+		if (!shouldLog) {
+			try {
+				fs.writeFileSync(this.logfilePath, "", { encoding: "utf8" });
+				console.log(
+					`[LOGS] Created new log file for this session ➜  ${this.logfilePath}`
+				);
+			} catch (err) {
+				console.error("[LOGS] Could not create new log file:", err);
+			}			
+		} else {
+			console.log(`[LOGS] No logs will be recorded for this session`)
+		}
   }
 
   log(
