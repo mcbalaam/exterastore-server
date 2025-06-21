@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { bearer } from '@elysiajs/bearer'
 import { loggerSession } from "./lib/logger";
-// import handleApiRequest from "./api/master";
+import { handleApiRequest } from "./api/router";
 
 export const STARTED_AT: number = Date.now()
 
@@ -12,12 +12,12 @@ export default LOGGER_SESSION;
 const app = new Elysia()
 	.use(bearer())
 	.get(`/api/v1`, () => {
-		return {motd: 'Hello from exteraStore :KakkoiWave:', lastUpdated: '16.06.25'}
+		return {motd: 'Hello from exteraStore :KakkoiWave:', lastUpdated: '21.06.25'}
 	})
 	.get('/api/v1/*', (ctx) => {
 		const raw = ctx.params['*'];
 		const args = raw ? raw.split('/') : [];
-		// return handleApiRequest(...args);
+		return handleApiRequest(...args);
 	})
 	.listen(3000);
 

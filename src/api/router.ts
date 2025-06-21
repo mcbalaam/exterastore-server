@@ -114,7 +114,7 @@ const handlers: Record<string, PluginHandler | PluginHandlers> = {
   } as PluginHandlers,
 };
 
-export default function handleApiRequest(...args: string[]) {
+export function handleApiRequest(...args: string[]) {
   const [mainRoute, subRoute, ...params] = args;
 
   if (mainRoute in handlers) {

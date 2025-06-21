@@ -42,3 +42,6 @@ yarn-error.log*
 package-lock.json
 **/*.bun
 /src/generated/prisma
+
+# configuration
+/config/master.toml
