@@ -1,4 +1,4 @@
-import generateMotd from "../misc/motd";
+import generateMotd from "../utils/motd";
 import pluginService from "../services/pluginService";
 import userService from "../services/userService";
 

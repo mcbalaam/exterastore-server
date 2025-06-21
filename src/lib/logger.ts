@@ -13,14 +13,14 @@ export class loggerSession {
   logfilePath: string;
 	shouldLog: boolean;
 
-  constructor(shouldLog: boolean = true) {
+  constructor(shouldLog: boolean) {
     this.logfilePath = path.join(
       LOGPATH,
       `${getCurrentFormattedDateTime('file')}.log`
     );
 		this.shouldLog = shouldLog;
 
-		if (!shouldLog) {
+		if (shouldLog) {
 			try {
 				fs.writeFileSync(this.logfilePath, "", { encoding: "utf8" });
 				console.log(
