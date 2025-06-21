@@ -2,6 +2,7 @@ import { Elysia } from "elysia";
 import { bearer } from '@elysiajs/bearer'
 import { loggerSession } from "./lib/logger";
 import { handleApiRequest } from "./api/router";
+import prisma from "./lib/prisma";
 
 export const STARTED_AT: number = Date.now()
 
@@ -24,6 +25,8 @@ const app = new Elysia()
 LOGGER_SESSION.log("generic", `Server started at ${app.server?.hostname}:${app.server?.port}`)
 
 console.log(`[INIT] Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
+
+LOGGER_SESSION.log("generic", "Connecting to to remote database...")
 
 process.on('SIGINT', () => {
   console.log('\n[INFO] The server is halting...');
