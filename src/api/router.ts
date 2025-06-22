@@ -1,6 +1,7 @@
 import generateMotd from "../utils/motd";
 import pluginService from "../services/pluginService";
 import userService from "../services/userService";
+import { exteraPlugin } from "../classes";
 
 type PluginHandler = (...args: any[]) => Promise<any>;
 type PluginHandlers = {
@@ -46,8 +47,8 @@ const handlers: Record<string, PluginHandler | PluginHandlers> = {
       return pluginService.getReactions(id);
     },
 
-    create: (data: any) => {
-      return pluginService.createPlugin(data);
+    create: (data: exteraPlugin) => {
+      return pluginService.createPlugin(data.id, data.description || "", data.license);
     },
 
     update: (id: string, data: any) => {
@@ -91,6 +92,7 @@ const handlers: Record<string, PluginHandler | PluginHandlers> = {
 
   users: {
     register: (data: any) => {
+      // Ожидается: { telegramId, username, passwordHash, profilePicture? }
       return userService.create(data);
     },
     updateUsername: (id: string, data: any) => {

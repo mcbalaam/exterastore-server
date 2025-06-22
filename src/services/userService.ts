@@ -1,28 +1,16 @@
 import prisma from "../lib/prisma";
 import Joi from "joi";
-import * as bcrypt from "bcrypt";
 import LOGGER_SESSION from "..";
 
 class UserService {
   static usernameSchema = Joi.string().min(5).max(15);
   static titleSchema = Joi.string().min(0).max(50);
   static bioSchema = Joi.string().min(0).max(150);
-  static emailSchema = Joi.string()
-    .email()
-    .min(5)
-    .max(40)
-    .required()
-    .lowercase()
-    .messages({
-      "string.email": "Please provide a valid email address",
-      "string.empty": "Email is required",
-    });
 
   // Updating the username
   async updateUsername(userId: string, newUsername: string) {
     const { error } = UserService.usernameSchema.validate(newUsername);
     if (error) throw new Error("Invalid username");
-
     try {
       const updatedUser = await prisma.user.update({
         where: { id: userId },
@@ -107,12 +95,12 @@ class UserService {
     userId: string,
     updates: {
       username?: string;
-      title?: string; // Изменено с description на title
+      title?: string;
       profilePicture?: string;
-      preferences?: any; // Добавлено для Json поля
+      preferences?: any;
     }
   ) {
-    // Валидация данных
+		
     if (updates.username) {
       const { error } = UserService.usernameSchema.validate(updates.username);
       if (error) throw new Error("Invalid username");
@@ -137,38 +125,31 @@ class UserService {
   }
 
   async create(userData: {
-    email: string;
+    telegramId: string;
     username: string;
-    password: string;
+    passwordHash: string;
     profilePicture?: string;
   }) {
-    const emailValidation = UserService.emailSchema.validate(userData.email);
-    if (emailValidation.error) {
-      throw new Error(emailValidation.error.details[0].message);
-    }
-
-    const usernameValidation = UserService.usernameSchema.validate(
-      userData.username
-    );
+    const usernameValidation = UserService.usernameSchema.validate(userData.username);
     if (usernameValidation.error) {
       throw new Error("Username must be 5-15 characters");
     }
-
+    if (!userData.passwordHash || userData.passwordHash.length < 10) {
+      throw new Error("Password hash is required and must be valid");
+    }
     try {
-      const hashedPassword = await bcrypt.hash(userData.password, 10);
-
       const newUser = await prisma.user.create({
         data: {
-          email: userData.email.toLowerCase(),
+          telegramId: userData.telegramId,
           username: userData.username,
-          passwordHash: hashedPassword, // Исправлено: используем passwordHash
+          passwordHash: userData.passwordHash,
           isSupporter: false,
           title: "New User",
-          profilePicture: userData.profilePicture || "", // Обязательное поле
+          profilePicture: userData.profilePicture || "",
         },
         select: {
           id: true,
-          email: true,
+          telegramId: true,
           username: true,
           title: true,
           isSupporter: true,
@@ -176,14 +157,10 @@ class UserService {
           createdAt: true,
         },
       });
-
       LOGGER_SESSION.log("generic", `Created new user: ${newUser.id}`);
       return newUser;
     } catch (error) {
-      LOGGER_SESSION.log(
-        "error",
-        `Failed to create new user for ${userData.email}`
-      );
+      LOGGER_SESSION.log("error", `Failed to create new user for telegramId ${userData.telegramId}`);
       throw error;
     }
   }
@@ -195,7 +172,7 @@ class UserService {
         select: {
           id: true,
           username: true,
-          email: true,
+          telegramId: true,
           title: true,
           profilePicture: true,
           isSupporter: true,
@@ -204,11 +181,9 @@ class UserService {
           preferences: true,
         },
       });
-
       if (!user) {
         throw new Error(`User with ID ${userId} not found`);
       }
-
       return user;
     } catch (error) {
       console.error("Get user error:", error);
@@ -223,14 +198,13 @@ class UserService {
         select: {
           id: true,
           username: true,
-          email: true,
+          telegramId: true,
           title: true,
           profilePicture: true,
           isSupporter: true,
           createdAt: true,
         },
       });
-
       return user;
     } catch (error) {
       console.error("Get user by username error:", error);
@@ -238,32 +212,14 @@ class UserService {
     }
   }
 
-  async getUserByEmail(email: string) {
+  async getUserByTelegramId(telegramId: string) {
     try {
-      const user = await prisma.user.findFirst({
-        where: { email: email.toLowerCase() },
+      const user = await prisma.user.findUnique({
+        where: { telegramId },
       });
-
       return user;
     } catch (error) {
-      console.error("Get user by email error:", error);
-      throw error;
-    }
-  }
-
-  async updatePassword(userId: string, newPassword: string) {
-    try {
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-      const updatedUser = await prisma.user.update({
-        where: { id: userId },
-        data: { passwordHash: hashedPassword },
-      });
-
-      LOGGER_SESSION.log("generic", `Updated password for user ${userId}`);
-      return updatedUser;
-    } catch (error) {
-      console.error("Password update error:", error);
+      console.error("Get user by telegramId error:", error);
       throw error;
     }
   }
@@ -274,7 +230,6 @@ class UserService {
         where: { id: userId },
         data: { preferences },
       });
-
       LOGGER_SESSION.log("generic", `Updated preferences for user ${userId}`);
       return updatedUser;
     } catch (error) {
@@ -298,7 +253,6 @@ class UserService {
           },
         },
       });
-
       return stars;
     } catch (error) {
       console.error("Get user stars error:", error);

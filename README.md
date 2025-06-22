@@ -124,13 +124,14 @@ downloads, createdAt, updatedAt, plugin{}
 
 ### Пользователи (Users)
 **POST /users**  
-Регистрация пользователя.  
+Регистрация пользователя через Telegram.  
 *Тело запроса:*  
 ```json
 {
-  "email": "valid email",
+  "telegramId": "string (уникальный идентификатор Telegram)",
   "username": "string (5-15 chars)",
-  "password": "string"
+  "passwordHash": "string (хеш пароля)",
+  "profilePicture": "string (url)?"
 }
 ```
 
