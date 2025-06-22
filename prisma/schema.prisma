@@ -9,59 +9,71 @@ datasource db {
 }
 
 model user {
-  id             String        @id @default(uuid())
-  username       String        @unique
+  id             String   @id @default(uuid())
+  username       String   @unique
   email          String
   title          String?
-	bio 					 String?
+  bio            String?
   timeoutDue     Int?
   profilePicture String
   isSupporter    Boolean
   passwordHash   String
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
   preferences    Json?
-  
-  stars          pluginStars[]
+
+  stars pluginStars[]
 }
 
 model exteraPlugin {
-  id             String          @id @default(uuid())
+  id             String   @id @default(uuid())
   name           String
+  license        String // apache 2.0, gpl 3.0, mit
   description    String?
   forkOriginId   String?
-  reactions      Json            @default("{}")
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  reactions      Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
   targetPlatform String[]
-  tags           Json            @default("{}")
-  
-  releases       pluginRelease[]
-  stars          pluginStars[]
-  forkOrigin     exteraPlugin?   @relation("PluginFork", fields: [forkOriginId], references: [id])
-  forks          exteraPlugin[]  @relation("PluginFork")
+  tags           Json?    @default("{}")
+  isHidden       Boolean  @default(false)
+  hiddenReason   String?
+
+  releases   pluginRelease[]
+  stars      pluginStars[]
+  forkOrigin exteraPlugin?   @relation("PluginFork", fields: [forkOriginId], references: [id])
+  forks      exteraPlugin[]  @relation("PluginFork")
 }
 
 model pluginRelease {
-  id           String       @id @default(uuid())
+  id           String   @id @default(uuid())
   releaseNotes String?
   file         String
   pluginId     String
-  reactions    Json         @default("{}")
+  reactions    Json     @default("{}")
   downloads    Int
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  releaseHash  String       @unique
-  
-  plugin       exteraPlugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  releaseHash  String   @unique
+
+  plugin exteraPlugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
 }
 
 model pluginStars {
   userId   String
   pluginId String
-  
-  user     user         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plugin   exteraPlugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
-  
+
+  user   user         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plugin exteraPlugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+
   @@id([userId, pluginId])
+}
+
+model activeSessions {
+  userId    String   @unique
+  sessionId String   @unique @default(uuid())
+  createdAt DateTime @default(now())
+  userAgent String?
+
+  @@id([userId, sessionId])
 }

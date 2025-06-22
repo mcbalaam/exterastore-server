@@ -14,7 +14,7 @@ class PluginService {
   static releaseNumberSchema = Joi.string().min(3).max(9);
   static releaseNotesSchema = Joi.string().min(0).max(100);
 
-  async createPlugin(name: string, description?: string) {
+  async createPlugin(name: string, license: string, description?: string) {
     try {
       const { error } = PluginService.nameSchema.validate(name);
       if (error) {
@@ -37,6 +37,7 @@ class PluginService {
         data: {
           name,
           description,
+					license
         },
       });
 
