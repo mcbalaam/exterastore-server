@@ -14,7 +14,7 @@ export const newSession = new Elysia({ name: "create-new-session" }).post("/news
 
 		if (!user || user.passwordHash !== passwordHash) {
       set.status = 401;
-			return "Username or password incorrect"
+			return { error: "Username or password incorrect" };
     }
 
 		const newSession = await prisma.activeSessions.create({
@@ -32,7 +32,7 @@ export const newSession = new Elysia({ name: "create-new-session" }).post("/news
 			secure: true,
 			sameSite: "strict",
 			path: "/",
-			maxAge: 60 * 60 * 24 * 7
+			maxAge: 60 * 60 * 24 * 7 * 3
     });
 		return newSession.sessionId;
   }

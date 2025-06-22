@@ -1,8 +1,8 @@
 import { Elysia } from "elysia";
 
 export const masterKeyAuth = new Elysia({ name: "master-key-auth" })
-  .onBeforeHandle(({ set, request }) => {
-    const authHeader = request.headers.get("authorization");
+  .onBeforeHandle(({ set, cookie }) => {
+    const requestKey = cookie.masterKey?.value;
     const masterKey = process.env.MASTER_API_KEY;
 
     if (!masterKey) {
@@ -10,7 +10,7 @@ export const masterKeyAuth = new Elysia({ name: "master-key-auth" })
       throw new Error("Master key not configured");
     }
 
-    if (authHeader === `Bearer ${masterKey}`) {
+    if (masterKey == requestKey) {
       return;
     }
 
