@@ -20,33 +20,32 @@ const app = new Elysia()
 
 // MOTD - публичный
 .get("/api/v1", () => ({
-    motd: 'Hello from exteraStore :KakkoiWave:',
-    lastUpdated: '21.06.25'
+	motd: 'Hello from exteraStore :KakkoiWave:',
+	lastUpdated: '24.06.25'
 }))
 
-// Плагины (Plugins)
-.guard(pluginsGuard, app => app
-	// Получить все плагины (полная информация)
-	.get("/plugins/all", pluginsAllHandler)
-	// Получить только имена плагинов
-	.get("/plugins/names", pluginsNamesHandler)
-	// Получить плагин по id
-	.get("/plugins/:id", pluginsGetHandler)
-	// Получить релизы плагина
-	.get("/plugins/:id/releases", pluginsReleasesHandler)
-	// Получить реакции плагина
-	.get("/plugins/:id/reactions", pluginsReactionsHandler)
-	// Создать новый плагин (POST)
-	.post("/plugins", pluginsCreateHandler)
-	// Обновить плагин (PUT)
-	.put("/plugins/:id", pluginsUpdateHandler)
-	// Удалить плагин (DELETE)
-	.delete("/plugins/:id", pluginsDeleteHandler)
-	// Добавить релиз к плагину (POST)
-	.post("/plugins/:id/releases", pluginsAddReleaseHandler)
-	// Поставить/снять звезду (POST)
-	.post("/plugins/:id/star", pluginsStarHandler)
+// plugin getters
+app.group("/api/v1/plugins", app =>
+		app
+			.get("/all", pluginsAllHandler)
+			.get("/names", pluginsNamesHandler)
+			.get("/:id", pluginsGetHandler)
+			.get("/:id/releases", pluginsReleasesHandler)
+			.get("/:id/reactions", pluginsReactionsHandler)
 )
+
+// plugin setters
+app.group("/api/v1/plugins", app =>
+	app.guard(pluginsGuard, app =>
+		app
+			.post("/", pluginsCreateHandler)
+			.put("/:id", pluginsUpdateHandler)
+			.delete("/:id", pluginsDeleteHandler)
+			.post("/:id/releases", pluginsAddReleaseHandler)
+			.post("/:id/star", pluginsStarHandler)
+	)
+)
+
 
 // Релизы (Releases)
 .guard(pluginsGuard, app => app

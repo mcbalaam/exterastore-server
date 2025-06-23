@@ -6,7 +6,6 @@ import {
   STATUS_INVALID_DESCRIPTION,
   STATUS_INVALID_NAME,
 } from "../constants";
-import { plugin } from "bun";
 
 class PluginService {
   static nameSchema = Joi.string().min(5).max(15);
@@ -113,7 +112,7 @@ class PluginService {
 
   async getAllPlugins() {
     try {
-      return await prisma.exteraPlugin.findMany({
+			const plugins = await prisma.exteraPlugin.findMany({
         include: {
           releases: true,
         },
@@ -121,6 +120,7 @@ class PluginService {
           createdAt: "desc",
         },
       });
+      return plugins.length ? plugins : []
     } catch (error) {
       LOGGER_SESSION.log("error", `Unable to fetch all plugins: ${error}`);
       throw error;
