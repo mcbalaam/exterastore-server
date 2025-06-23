@@ -9,7 +9,7 @@ import {
 
 class PluginService {
   static nameSchema = Joi.string().min(5).max(15);
-  static descriptionSchema = Joi.string().min(0).max(300);
+  static descriptionSchema = Joi.string().max(300);
   static releaseNumberSchema = Joi.string().min(3).max(9);
   static releaseNotesSchema = Joi.string().min(0).max(100);
 
@@ -22,31 +22,29 @@ class PluginService {
       }
 
       if (description) {
-        const descError =
-          PluginService.descriptionSchema.validate(description).error;
-        if (descError)
+        const { error } = PluginService.descriptionSchema.validate(description);
+        if (error) {
           LOGGER_SESSION.log(
             "error",
-            `Invalid description: ${descError.message}`
+            `Invalid description: ${error.message}`
           );
-        return STATUS_INVALID_DESCRIPTION;
+					console.log(error?.message)
+        	return STATUS_INVALID_DESCRIPTION;
+				}
       }
 
       const plugin = await prisma.exteraPlugin.create({
         data: {
           name,
           description,
-					license
+          license,
         },
       });
 
       LOGGER_SESSION.log("generic", `Created new plugin: ${plugin.id}`);
       return plugin;
     } catch (error) {
-      LOGGER_SESSION.log(
-        "error",
-        `Something went wrong while creating a new plugin! ${error}`
-      );
+      LOGGER_SESSION.log("error", `Prisma error: ${error}`);
       return STATUS_ERR;
     }
   }
@@ -88,7 +86,10 @@ class PluginService {
       );
       return release;
     } catch (error) {
-      LOGGER_SESSION.log("error", `Unable to create new release for plugin ID ${pluginId}: ${error}`);
+      LOGGER_SESSION.log(
+        "error",
+        `Unable to create new release for plugin ID ${pluginId}: ${error}`
+      );
       throw error;
     }
   }
@@ -105,14 +106,17 @@ class PluginService {
 
       return plugin;
     } catch (error) {
-      LOGGER_SESSION.log("error", `Unable to fetch plugin ID ${pluginId}: ${error}`);
+      LOGGER_SESSION.log(
+        "error",
+        `Unable to fetch plugin ID ${pluginId}: ${error}`
+      );
       throw error;
     }
   }
 
   async getAllPlugins() {
     try {
-			const plugins = await prisma.exteraPlugin.findMany({
+      const plugins = await prisma.exteraPlugin.findMany({
         include: {
           releases: true,
         },
@@ -120,7 +124,7 @@ class PluginService {
           createdAt: "desc",
         },
       });
-      return plugins.length ? plugins : []
+      return plugins.length ? plugins : [];
     } catch (error) {
       LOGGER_SESSION.log("error", `Unable to fetch all plugins: ${error}`);
       throw error;
@@ -144,7 +148,10 @@ class PluginService {
 
       return release;
     } catch (error) {
-      LOGGER_SESSION.log("error", `Unable to fetch latest release for plugin ID ${pluginId}: ${error}`);
+      LOGGER_SESSION.log(
+        "error",
+        `Unable to fetch latest release for plugin ID ${pluginId}: ${error}`
+      );
       throw error;
     }
   }
@@ -172,7 +179,10 @@ class PluginService {
         releases: await prisma.pluginRelease.count(),
       };
     } catch (error) {
-      LOGGER_SESSION.log("error", `Unable to count plugins and releases: ${error}`);
+      LOGGER_SESSION.log(
+        "error",
+        `Unable to count plugins and releases: ${error}`
+      );
       throw error;
     }
   }
@@ -223,7 +233,10 @@ class PluginService {
       LOGGER_SESSION.log("generic", `Deleted plugin ${pluginId}`);
       return deletedPlugin;
     } catch (error) {
-      LOGGER_SESSION.log("error", `Unable to delete plugin for plugin ID ${pluginId}: ${error}`);
+      LOGGER_SESSION.log(
+        "error",
+        `Unable to delete plugin for plugin ID ${pluginId}: ${error}`
+      );
       throw error;
     }
   }
@@ -238,7 +251,10 @@ class PluginService {
       });
 
       if (!release) {
-        LOGGER_SESSION.log("error", `Non-existent releaseId request: ${releaseId}`);
+        LOGGER_SESSION.log(
+          "error",
+          `Non-existent releaseId request: ${releaseId}`
+        );
         return STATUS_ERR;
       }
 
