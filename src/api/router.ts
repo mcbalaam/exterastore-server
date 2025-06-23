@@ -79,7 +79,7 @@ const handlers: Record<string, PluginHandler | PluginHandlers> = {
       return pluginService.addPluginStar(id, userId);
     },
 
-  } as PluginHandlers,
+  } as PluginHandlers, // Apply session and auth middleware to plugin routes
 
   releases: {
     get: (id: string) => {
@@ -88,11 +88,10 @@ const handlers: Record<string, PluginHandler | PluginHandlers> = {
     delete: (id: string) => {
       return pluginService.deleteRelease(id);
     },
-  } as PluginHandlers,
+  } as PluginHandlers, // Apply session and auth middleware to release routes
 
   users: {
     register: (data: any) => {
-      // Ожидается: { telegramId, username, passwordHash, profilePicture? }
       return userService.create(data);
     },
     updateUsername: (id: string, data: any) => {
@@ -116,6 +115,10 @@ const handlers: Record<string, PluginHandler | PluginHandlers> = {
   } as PluginHandlers,
 };
 
+
+import { validateSession } from "./middleware/session/validateSession";
+import { masterKeyAuth } from "./middleware/auth/validateMasterKey";
+
 export function handleApiRequest(...args: string[]) {
   const [mainRoute, subRoute, ...params] = args;
 
@@ -133,3 +136,13 @@ export function handleApiRequest(...args: string[]) {
 
   return Promise.reject("Route not found");
 }
+
+// Example usage with middleware:
+// Assuming you have Elysia instance 'app'
+// app.use(validateSession).get('/plugins', () => pluginService.getAllPlugins());
+
+// Apply session and auth middleware to plugin routes
+// app.get('/plugins', (context) => {
+//   return pluginService.getAllPlugins();
+// });
+// TODO: Implement the actual application of the middleware based on the README and the existing middleware

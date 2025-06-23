@@ -1,35 +1,68 @@
 import { Elysia } from "elysia";
-import { bearer } from '@elysiajs/bearer'
+import { validateSession } from "./api/middleware/session/validateSession";
+import { masterKeyAuth } from "./api/middleware/auth/validateMasterKey";
+import { pluginsAllHandler, pluginsCreateHandler, pluginsGetHandler, pluginsUpdateHandler, pluginsDeleteHandler, pluginsNamesHandler, pluginsReleasesHandler, pluginsReactionsHandler, pluginsAddReleaseHandler, pluginsStarHandler } from "./api/routes/plugins"
+import { usersRegisterHandler, usersUpdateUsernameHandler, usersUpdateTitleHandler, usersUpdateBioHandler, usersToggleSupporterHandler, usersUpdateProfileHandler, usersDeleteHandler } from "./api/routes/users"
 import { loggerSession } from "./lib/logger";
-import { handleApiRequest } from "./api/router";
-import prisma from "./lib/prisma";
 
-export const STARTED_AT: number = Date.now()
+import { releasesGetHandler, releasesDeleteHandler } from "./api/routes/releases";
 
-const shouldLog: boolean = !process.argv.slice(3).includes('--no-logs');
-const LOGGER_SESSION = new loggerSession(shouldLog);
+
+// Групповой middleware для всех защищённых маршрутов /plugins
+const pluginsGuard = {
+	beforeHandle: validateSession
+};
+
+const LOGGER_SESSION = new loggerSession(true)
 export default LOGGER_SESSION;
 
 const app = new Elysia()
-	.use(bearer())
-	.get(`/api/v1`, () => {
-		return {motd: 'Hello from exteraStore :KakkoiWave:', lastUpdated: '21.06.25'}
-	})
-	.get('/api/v1/*', (ctx) => {
-		const raw = ctx.params['*'];
-		const args = raw ? raw.split('/') : [];
-		return handleApiRequest(...args);
-	})
-	.listen(3000);
 
-LOGGER_SESSION.log("generic", `Server started at ${app.server?.hostname}:${app.server?.port}`)
+// MOTD - публичный
+.get("/api/v1", () => ({
+    motd: 'Hello from exteraStore :KakkoiWave:',
+    lastUpdated: '21.06.25'
+}))
 
-console.log(`[INIT] Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
+// Плагины (Plugins)
+.guard(pluginsGuard, app => app
+	// Получить все плагины (полная информация)
+	.get("/plugins/all", pluginsAllHandler)
+	// Получить только имена плагинов
+	.get("/plugins/names", pluginsNamesHandler)
+	// Получить плагин по id
+	.get("/plugins/:id", pluginsGetHandler)
+	// Получить релизы плагина
+	.get("/plugins/:id/releases", pluginsReleasesHandler)
+	// Получить реакции плагина
+	.get("/plugins/:id/reactions", pluginsReactionsHandler)
+	// Создать новый плагин (POST)
+	.post("/plugins", pluginsCreateHandler)
+	// Обновить плагин (PUT)
+	.put("/plugins/:id", pluginsUpdateHandler)
+	// Удалить плагин (DELETE)
+	.delete("/plugins/:id", pluginsDeleteHandler)
+	// Добавить релиз к плагину (POST)
+	.post("/plugins/:id/releases", pluginsAddReleaseHandler)
+	// Поставить/снять звезду (POST)
+	.post("/plugins/:id/star", pluginsStarHandler)
+)
 
-LOGGER_SESSION.log("generic", "Connecting to to remote database...")
+// Релизы (Releases)
+.guard(pluginsGuard, app => app
+    .get("/releases/:id", releasesGetHandler)
+    .delete("/releases/:id", releasesDeleteHandler)
+)
 
-process.on('SIGINT', () => {
-  console.log('\n[INFO] The server is halting...');
-	LOGGER_SESSION.log("generic", `Server halted.`)
-  process.exit(0);
-});
+// Пользователи (Users) — регистрация открыта, остальные действия требуют сессии
+.post("/users", usersRegisterHandler)
+.guard(pluginsGuard, app => app
+	.put("/users/:id/username", usersUpdateUsernameHandler)
+	.put("/users/:id/title", usersUpdateTitleHandler)
+	.put("/users/:id/description", usersUpdateBioHandler)
+	.put("/users/:id/supporter", usersToggleSupporterHandler)
+	.put("/users/:id/profile", usersUpdateProfileHandler)
+	.delete("/users/:id", usersDeleteHandler)
+)
+
+.listen(3000);

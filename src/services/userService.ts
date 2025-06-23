@@ -238,6 +238,17 @@ class UserService {
     }
   }
 
+	async checkUsernameExists(username: string) {
+    try {
+      const updatedUser = await prisma.user.findUnique({
+        where: { username: username },
+      });
+			if (updatedUser) {return true;}
+    } catch (error) {
+			return false;
+    }
+  }
+
   async getUserStars(userId: string) {
     try {
       const stars = await prisma.pluginStars.findMany({
