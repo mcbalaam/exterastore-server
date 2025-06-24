@@ -1,9 +1,24 @@
 import type { Context } from "elysia";
-import userService from "../../services/userService";
 
 export const STATUS_INVALID_NAME = "Invalid name";
 export const STATUS_INVALID_DESCRIPTION = "Invalid description";
 export const STATUS_ERR = "Error";
+
+import {
+  create,
+  updateUsername,
+  entitle,
+  updateBio,
+  toggleSupporter,
+  updateProfile,
+  remove,
+  getUserById,
+  getUserByUsername,
+  getUserByTelegramId,
+  updatePreferences,
+  checkUsernameExists,
+  getUserStars,
+} from "../../services/userService";
 
 export const usersRegisterHandler = async ({ body, set }: Context) => {
   try {
@@ -14,7 +29,7 @@ export const usersRegisterHandler = async ({ body, set }: Context) => {
       profilePicture?: string;
     };
 
-    const newUser = await userService.create(userData);
+    const newUser = await create(userData);
     return newUser;
   } catch (error) {
     set.status = 400;
@@ -31,7 +46,7 @@ export const usersUpdateUsernameHandler = async ({
     const { id } = params;
     const { newUsername } = body as { newUsername: string };
 
-    const updatedUser = await userService.updateUsername(id, newUsername);
+    const updatedUser = await updateUsername(id, newUsername);
     return updatedUser;
   } catch (error) {
     set.status = 400;
@@ -48,7 +63,7 @@ export const usersUpdateTitleHandler = async ({
     const { id } = params;
     const { newTitle } = body as { newTitle: string };
 
-    const updatedUser = await userService.entitle(id, newTitle);
+    const updatedUser = await entitle(id, newTitle);
     return updatedUser;
   } catch (error) {
     set.status = 400;
@@ -61,7 +76,7 @@ export const usersUpdateBioHandler = async ({ params, body, set }: Context) => {
     const { id } = params;
     const { newBio } = body as { newBio: string };
 
-    await userService.updateBio(id, newBio);
+    await updateBio(id, newBio);
     return { success: true };
   } catch (error) {
     set.status = 400;
@@ -78,7 +93,7 @@ export const usersToggleSupporterHandler = async ({
     const { id } = params;
     const { status } = body as { status: boolean };
 
-    const updatedUser = await userService.toggleSupporter(id, status);
+    const updatedUser = await toggleSupporter(id, status);
     return updatedUser;
   } catch (error) {
     set.status = 400;
@@ -100,7 +115,7 @@ export const usersUpdateProfileHandler = async ({
       preferences?: any;
     };
 
-    const updatedUser = await userService.updateProfile(id, updates);
+    const updatedUser = await updateProfile(id, updates);
     return updatedUser;
   } catch (error) {
     set.status = 400;
@@ -111,7 +126,7 @@ export const usersUpdateProfileHandler = async ({
 export const usersDeleteHandler = async ({ params, set }: Context) => {
   try {
     const { id } = params;
-    const result = await userService.remove(id);
+    const result = await remove(id);
     return result;
   } catch (error) {
     set.status = 400;
@@ -123,7 +138,7 @@ export const usersDeleteHandler = async ({ params, set }: Context) => {
 export const getUserByIdHandler = async ({ params, set }: Context) => {
   try {
     const { id } = params;
-    const user = await userService.getUserById(id);
+    const user = await getUserById(id);
     return user;
   } catch (error) {
     set.status = 404;
@@ -135,7 +150,7 @@ export const getUserByIdHandler = async ({ params, set }: Context) => {
 export const getUserByUsernameHandler = async ({ params, set }: Context) => {
   try {
     const { username } = params;
-    const user = await userService.getUserByUsername(username);
+    const user = await getUserByUsername(username);
     if (!user) {
       set.status = 404;
       return { error: "User not found" };
@@ -151,7 +166,7 @@ export const getUserByUsernameHandler = async ({ params, set }: Context) => {
 export const getUserByTelegramIdHandler = async ({ params, set }: Context) => {
   try {
     const { telegramId } = params;
-    const user = await userService.getUserByTelegramId(telegramId);
+    const user = await getUserByTelegramId(telegramId);
     if (!user) {
       set.status = 404;
       return { error: "User not found" };
@@ -172,8 +187,8 @@ export const updatePreferencesHandler = async ({
   try {
     const { id } = params;
     const { preferences } = body as { preferences: any };
-    
-    const updatedUser = await userService.updatePreferences(id, preferences);
+
+    const updatedUser = await updatePreferences(id, preferences);
     return updatedUser;
   } catch (error) {
     set.status = 400;
@@ -185,7 +200,7 @@ export const updatePreferencesHandler = async ({
 export const usernameExistsHandler = async ({ params, set }: Context) => {
   try {
     const { username } = params;
-    const exists = await userService.checkUsernameExists(username);
+    const exists = await checkUsernameExists(username);
     return { exists };
   } catch (error) {
     set.status = 400;
@@ -197,7 +212,7 @@ export const usernameExistsHandler = async ({ params, set }: Context) => {
 export const getUserStarsHandler = async ({ params, set }: Context) => {
   try {
     const { userId } = params;
-    const stars = await userService.getUserStars(userId);
+    const stars = await getUserStars(userId);
     return stars;
   } catch (error) {
     set.status = 400;

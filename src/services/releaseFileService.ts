@@ -5,7 +5,6 @@ import { BunFile } from "bun";
 
 const STORAGE_ROOT = path.resolve(process.cwd(), "storage");
 
-
 export async function createRelease(pluginId: string, releaseId: string, file: BunFile, filename: string) {
 	const pluginDir = path.join(STORAGE_ROOT, pluginId);
 	const releaseDir = path.join(pluginDir, releaseId);

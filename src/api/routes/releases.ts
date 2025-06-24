@@ -1,11 +1,11 @@
 import type { Context } from "elysia";
-import releaseService from "../../services/releaseService";
+import { getReleaseById, deleteRelease } from "../../services/pluginService";
 
 // Получить релиз по id
 export const releasesGetHandler = async ({ params, set }: Context) => {
   try {
     const { id } = params;
-    const release = await releaseService.getReleaseById(id);
+    const release = await getReleaseById(id);
     return release;
   } catch (error) {
     set.status = 404;
@@ -17,7 +17,7 @@ export const releasesGetHandler = async ({ params, set }: Context) => {
 export const releasesDeleteHandler = async ({ params, set }: Context) => {
   try {
     const { id } = params;
-    const deleted = await releaseService.deleteRelease(id);
+    const deleted = await deleteRelease(id);
     return deleted;
   } catch (error) {
     set.status = 404;
