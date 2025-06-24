@@ -49,50 +49,6 @@ export async function createPlugin(
   }
 }
 
-export async function createRelease(
-  pluginId: string,
-  fileReference: string,
-  releaseHash: string,
-  releaseNotes?: string
-) {
-  try {
-    if (releaseNotes) {
-      const { error } = SCHEMA_RELEASENOTES.validate(releaseNotes);
-      if (error) throw new Error(`Invalid release notes: ${error.message}`);
-    }
-
-    const plugin = await prisma.exteraPlugin.findUnique({
-      where: { id: pluginId },
-    });
-
-    if (!plugin) {
-      throw new Error(`Plugin with ID ${pluginId} not found`);
-    }
-
-    const release = await prisma.pluginRelease.create({
-      data: {
-        releaseNotes,
-        file: fileReference,
-        pluginId,
-        releaseHash,
-        downloads: 0,
-      },
-    });
-
-    LOGGER_SESSION.log(
-      "generic",
-      `Uploaded new release for plugin ${pluginId}: ${release.id}`
-    );
-    return release;
-  } catch (error) {
-    LOGGER_SESSION.log(
-      "error",
-      `Unable to create new release for plugin ID ${pluginId}: ${error}`
-    );
-    throw error;
-  }
-}
-
 export async function getPluginById(pluginId: string) {
   try {
     const plugin = await prisma.exteraPlugin.findUnique({
@@ -278,20 +234,6 @@ export async function getAllReleasesForPlugin(pluginId: string) {
     return releases;
   } catch (error) {
     LOGGER_SESSION.log("error", `Couldn't fetch releases for ${pluginId}`);
-    throw error;
-  }
-}
-
-export async function deleteRelease(releaseId: string) {
-  try {
-    const deletedRelease = await prisma.pluginRelease.delete({
-      where: { id: releaseId },
-    });
-
-    LOGGER_SESSION.log("generic", `Deleted release ${releaseId}`);
-    return deletedRelease;
-  } catch (error) {
-    console.error("Release deletion error:", error);
     throw error;
   }
 }

@@ -8,9 +8,10 @@ import {
   createPlugin,
   updatePlugin,
   deletePlugin,
-  createRelease,
   addPluginStar,
 } from "../../services/pluginService";
+
+import { createRelease } from "../../services/releaseService";
 
 export const STATUS_INVALID_NAME = "Invalid name";
 export const STATUS_INVALID_DESCRIPTION = "Invalid description";

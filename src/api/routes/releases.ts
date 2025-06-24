@@ -1,5 +1,6 @@
 import type { Context } from "elysia";
-import { getReleaseById, deleteRelease } from "../../services/pluginService";
+import { getReleaseById } from "../../services/pluginService";
+import { deleteRelease } from "../../services/releaseService";
 
 // Получить релиз по id
 export const releasesGetHandler = async ({ params, set }: Context) => {
