@@ -6,7 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun run --watch src/index.ts",
     "start": "bun run src/index.ts",
-		"logs": "bun run src/utils/clearLogs.ts"
+		"clear": "bun run src/utils/clearTrash.ts"
   },
   "dependencies": {
     "@elysiajs/bearer": "^1.3.0",

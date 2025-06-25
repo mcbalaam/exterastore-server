@@ -96,7 +96,7 @@ export async function getAllReleaseFiles(pluginId: string): Promise<string[]> {
   return files;
 }
 
-export async function deleteRelease(pluginId: string, releaseId: string) {
+export async function deleteReleaseFile(pluginId: string, releaseId: string) {
   const releaseDir = path.join(STORAGE_ROOT, pluginId, releaseId);
   if (existsSync(releaseDir)) {
     await rm(releaseDir, { recursive: true, force: true });

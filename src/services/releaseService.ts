@@ -1,7 +1,7 @@
 import prisma from "../lib/prisma";
 import LOGGER_SESSION from "../lib/logger";
 import { STATUS_ERR } from "../constants";
-import { getReleaseFile, getAllReleaseFiles, deleteAllPluginReleases } from "./releaseFileService";
+import { getReleaseFile, getAllReleaseFiles, deleteAllPluginReleases, deleteReleaseFile } from "./releaseFileService";
 
 export async function createRelease(
 	pluginId: string,
@@ -60,22 +60,28 @@ export async function getAllReleaseFilesForPlugin(pluginId: string) {
 
 // 4. Удалить конкретный релиз (файлы + запись в БД)
 export async function fullyDeleteRelease(releaseId: string) {
-	try {
-		const release = await prisma.pluginRelease.findUnique({
-			where: { id: releaseId }
-		});
-		if (!release) throw new Error(`Release with ID ${releaseId} not found`);
+  try {
+    const release = await prisma.pluginRelease.findUnique({
+      where: { id: releaseId }
+    });
+    if (!release) throw new Error(`Release with ID ${releaseId} not found`);
 
-		// Удаляем файлы релиза
-		const deletedRelease = await deleteRelease(releaseId);
+    // Удаляем файлы релиза
+    await deleteReleaseFile(release.pluginId, releaseId);
 
-		LOGGER_SESSION.log("generic", `Deleted release ${releaseId}`);
-		return deletedRelease;
-	} catch (error) {
-		LOGGER_SESSION.log("error", `Release deletion error: ${error}`);
-		throw error;
-	}
+    // Удаляем запись из БД
+    const deletedRelease = await prisma.pluginRelease.delete({
+      where: { id: releaseId }
+    });
+
+    LOGGER_SESSION.log("generic", `Deleted release ${releaseId}`);
+    return deletedRelease;
+  } catch (error) {
+    LOGGER_SESSION.log("error", `Release deletion error: ${error}`);
+    throw error;
+  }
 }
+
 
 // 5. Удалить все релизы и папку плагина
 export async function deleteAllReleasesForPlugin(pluginId: string) {

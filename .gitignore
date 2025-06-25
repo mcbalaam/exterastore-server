@@ -45,3 +45,6 @@ package-lock.json
 
 # configuration
 /config/master.toml
+
+# plugins
+/storage/*
