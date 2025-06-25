@@ -1,5 +1,5 @@
 import prisma from "../lib/prisma";
-import LOGGER_SESSION from "..";
+import LOGGER_SESSION from "../lib/logger";
 import { STATUS_ERR } from "../constants";
 import { getReleaseFile, getAllReleaseFiles, deleteAllPluginReleases } from "./releaseFileService";
 
@@ -67,12 +67,7 @@ export async function fullyDeleteRelease(releaseId: string) {
 		if (!release) throw new Error(`Release with ID ${releaseId} not found`);
 
 		// Удаляем файлы релиза
-		await deleteRelease(releaseId);
-
-		// Удаляем запись из БД
-		const deletedRelease = await prisma.pluginRelease.delete({
-			where: { id: releaseId }
-		});
+		const deletedRelease = await deleteRelease(releaseId);
 
 		LOGGER_SESSION.log("generic", `Deleted release ${releaseId}`);
 		return deletedRelease;

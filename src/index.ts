@@ -29,7 +29,7 @@ import {
   deleteReleaseFileHandler,
   deleteAllPluginReleasesHandler,
 } from "./api/routes/files";
-import { loggerSession } from "./lib/logger";
+import LOGGER_SESSION from "./lib/logger";
 
 import {
   releasesGetHandler,
@@ -40,9 +40,6 @@ import {
 const pluginsGuard = {
   beforeHandle: validateSession,
 };
-
-const LOGGER_SESSION = new loggerSession(true);
-export default LOGGER_SESSION;
 
 const app = new Elysia()
 

@@ -9,7 +9,7 @@ const LOGLEVELS = {
   generic: "[LOG]",
 };
 
-export class loggerSession {
+class loggerSession {
   logfilePath: string;
 	shouldLog: boolean;
 
@@ -67,3 +67,6 @@ function getCurrentFormattedDateTime(formatAs: 'file' | 'time') {
 
   return formatAs == 'time' ? `${year}.${month}.${day} ${hours}:${minutes}:${seconds}` : `${year}.${month}.${day}-${hours}.${minutes}.${seconds}`;
 }
+
+const LOGGER_SESSION = new loggerSession(true);
+export default LOGGER_SESSION;

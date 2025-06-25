@@ -1,5 +1,5 @@
 import prisma from "../lib/prisma";
-import LOGGER_SESSION from "..";
+import LOGGER_SESSION from "../lib/logger";
 import {
   SCHEMA_PLUGINNAME,
   SCHEMA_DESCRIPTION,
