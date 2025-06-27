@@ -14,8 +14,6 @@ if (fs.existsSync(LOGPATH)) {
       fs.unlinkSync(filePath);
     }
   });
-
-  console.log("Log history cleared");
 }
 
 if (fs.existsSync(STORAGEPATH)) {
@@ -31,3 +29,5 @@ if (fs.existsSync(STORAGEPATH)) {
     }
   });
 }
+
+console.log("Successfully cleared")

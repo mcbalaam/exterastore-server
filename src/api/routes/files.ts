@@ -6,7 +6,7 @@ import {
   createRelease,
   getReleaseFile,
   getAllReleaseFiles,
-  deleteRelease,
+  deleteReleaseFile,
   deleteAllPluginReleases,
 } from "../../services/releaseFileService";
 
@@ -64,7 +64,7 @@ export const getAllReleaseFilesHandler = async ({ params, set }: Context) => {
 export const deleteReleaseFileHandler = async ({ params, set }: Context) => {
   try {
     const { pluginId, releaseId } = params;
-    const ok = await deleteRelease(pluginId, releaseId);
+    const ok = await deleteReleaseFile(pluginId, releaseId);
     if (!ok) {
       set.status = 404;
       return { error: "Release not found" };
