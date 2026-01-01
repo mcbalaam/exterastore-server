@@ -1,4 +1,4 @@
-import { mkdir, rm, readdir, unlink } from "node:fs/promises";
+import { mkdir, rm, readdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { BunFile } from "bun";
@@ -10,7 +10,7 @@ export async function createRelease(
   pluginId: string,
   releaseId: string,
   file: BunFile,
-  filename: string
+  filename: string,
 ) {
   const pluginDir = path.join(STORAGE_ROOT, pluginId);
   const releaseDir = path.join(pluginDir, releaseId);
@@ -26,8 +26,8 @@ export async function createRelease(
   const filePath = path.join(STORAGE_ROOT, pluginId, releaseId, filename);
   const dirPath = path.dirname(filePath);
   try {
-    await mkdir(dirPath, { recursive: true }); // Создаёт все недостающие папки!
-    await Bun.write(filePath, file); // Теперь можно безопасно писать файл
+    await mkdir(dirPath, { recursive: true });
+    await Bun.write(filePath, file);
   } catch (e) {
     console.error("Ошибка создания файла релиза:", e);
   }
@@ -37,7 +37,7 @@ export async function createRelease(
 export async function getReleaseFile(
   pluginId: string,
   releaseId: string,
-  filename: string
+  filename: string,
 ): Promise<BunFile | null> {
   const filePath = path.join(STORAGE_ROOT, pluginId, releaseId, filename);
   if (!existsSync(filePath)) return null;
@@ -57,7 +57,7 @@ export async function getAllReleaseFiles(pluginId: string): Promise<string[]> {
   } catch (error: any) {
     console.error(
       `[ERROR] Не удалось прочитать папку плагина ${pluginDir}:`,
-      error
+      error,
     );
     LOGGER_SESSION.log("error", error);
     return [];
@@ -73,7 +73,7 @@ export async function getAllReleaseFiles(pluginId: string): Promise<string[]> {
       } catch (e: any) {
         console.error(
           `[ERROR] Не удалось прочитать папку релиза ${releaseDir}:`,
-          e
+          e,
         );
         LOGGER_SESSION.log("error", e);
         continue;
@@ -83,7 +83,7 @@ export async function getAllReleaseFiles(pluginId: string): Promise<string[]> {
       }
     } else {
       console.warn(
-        `[WARN] Найден не-папка в директории плагина: ${dirent.name}`
+        `[WARN] Найден не-папка в директории плагина: ${dirent.name}`,
       );
     }
   }
@@ -91,7 +91,7 @@ export async function getAllReleaseFiles(pluginId: string): Promise<string[]> {
     console.warn(`[WARN] Для плагина ${pluginId} не найдено файлов релизов`);
     LOGGER_SESSION.log("error", pluginId);
   }
-	console.log(`[DEBUG] Файлы для плагина ${pluginId}:`, files);
+  console.log(`[DEBUG] Файлы для плагина ${pluginId}:`, files);
 
   return files;
 }
