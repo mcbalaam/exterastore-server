@@ -1,72 +1,101 @@
-import * as fs from "fs";
-import * as path from "path";
+import pino from 'pino';
 
-const LOGPATH = path.join(__dirname, "..", "..", "logs");
-const LOGLEVELS = {
-  request: "[REQ]",
-  error: "[ERR]",
-  fatalerror: "[FAT]",
-  generic: "[LOG]",
+const getTransport = () => {
+  if (process.env.LOGSTASH_HOST) {
+    // production: logstash
+    return {
+      target: 'pino-socket',
+      options: {
+        address: process.env.LOGSTASH_HOST,
+        port: parseInt(process.env.LOGSTASH_PORT || '5000'),
+        mode: 'tcp',
+        reconnect: true,
+        reconnectTries: 10
+      }
+    };
+  } else {
+    // development
+    return {
+      target: 'pino-pretty',
+      options: {
+        colorize: true,
+        translateTime: 'yyyy.mm.dd HH:MM:ss',
+        ignore: 'pid,hostname'
+      }
+    };
+  }
 };
 
-class loggerSession {
-  logfilePath: string;
-	shouldLog: boolean;
+const pinoLogger = pino({
+  level: process.env.LOG_LEVEL || 'info',
+  timestamp: () => `,"time":"${new Date().toISOString()}"`,
+  formatters: {
+    level: (label) => ({ level: label })
+  },
+  base: {
+    service: process.env.SERVICE_NAME || 'exterastore-server',
+    environment: process.env.NODE_ENV || 'development'
+  },
+  transport: getTransport()
+});
 
-  constructor(shouldLog: boolean) {
-    this.logfilePath = path.join(
-      LOGPATH,
-      `${getCurrentFormattedDateTime('file')}.log`
-    );
-		this.shouldLog = shouldLog;
+class Logger {
+  private shouldLog: boolean;
+  private logger: pino.Logger;
 
-		if (shouldLog) {
-			try {
-				fs.writeFileSync(this.logfilePath, "", { encoding: "utf8" });
-				console.log(
-					`[LOGS] Created new log file for this session ➜  ${this.logfilePath}`
-				);
-			} catch (err) {
-				console.error("[LOGS] Could not create new log file:", err);
-			}			
-		} else {
-			console.log(`[LOGS] No logs will be recorded for this session`)
-		}
+  constructor(shouldLog: boolean = true) {
+    this.shouldLog = shouldLog;
+    this.logger = pinoLogger;
+
+    if (shouldLog) {
+      this.logger.info('Logger session initialized');
+    } else {
+      console.log('[LOGS] No logs will be recorded for this session');
+    }
   }
 
-  log(
-    level: "request" | "error" | "fatalerror" | "generic",
-    text: string
-  ) {
-		if (!this.shouldLog) {return}
-    const logLevel = LOGLEVELS[level] || LOGLEVELS.generic;
+  info(message: string, data?: object) {
+    if (!this.shouldLog) return;
+    this.logger.info(data || {}, message);
+  }
 
-    const timestamp = getCurrentFormattedDateTime('time');
-    const logEntry = `${logLevel} ${timestamp} "${text}"\n`;
+  error(message: string, error?: Error | object) {
+    if (!this.shouldLog) return;
+    if (error instanceof Error) {
+      this.logger.error({ 
+        error: error.message, 
+        stack: error.stack 
+      }, message);
+    } else {
+      this.logger.error(error || {}, message);
+    }
+  }
 
-    try {
-      fs.writeFileSync(this.logfilePath, logEntry, {
-        encoding: "utf8",
-        flag: "a",
-      });
-    } catch (err) {
-      console.error("[LOGS] Error writing file:", err);
+  warn(message: string, data?: object) {
+    if (!this.shouldLog) return;
+    this.logger.warn(data || {}, message);
+  }
+
+  debug(message: string, data?: object) {
+    if (!this.shouldLog) return;
+    this.logger.debug(data || {}, message);
+  }
+
+  fatal(message: string, error?: Error | object) {
+    if (!this.shouldLog) return;
+    if (error instanceof Error) {
+      this.logger.fatal({ 
+        error: error.message, 
+        stack: error.stack 
+      }, message);
+    } else {
+      this.logger.fatal(error || {}, message);
     }
   }
 }
 
-function getCurrentFormattedDateTime(formatAs: 'file' | 'time') {
-  const now = new Date();
+const logger = new Logger(
+  process.env.DISABLE_LOGGING !== 'true'
+);
 
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  const hours = String(now.getHours()).padStart(2, "0");
-  const minutes = String(now.getMinutes()).padStart(2, "0");
-  const seconds = String(now.getSeconds()).padStart(2, "0");
-
-  return formatAs == 'time' ? `${year}.${month}.${day} ${hours}:${minutes}:${seconds}` : `${year}.${month}.${day}-${hours}.${minutes}.${seconds}`;
-}
-
-const LOGGER_SESSION = new loggerSession(true);
-export default LOGGER_SESSION;
+export default logger;
