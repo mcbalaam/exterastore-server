@@ -1,0 +1,77 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+model Plugin {
+  id             String   @id @default(uuid()) // UUID плагина
+  name           String // название плагина
+  description    String? // описание плагина 
+  license        String // лицензия распостранения
+  authorId       String // айди аккаунта автора
+  createdAt      DateTime @default(now()) // таймштамп создания
+  updatedAt      DateTime @updatedAt // таймштамп последней обновы
+  targetPlatform String[] // целевые платформы (аю/экстера)
+  forkOriginId   String? // ориджин айди если это помечено как форк плагина
+  tags           String[] // теги плагина (ютилити/развлекательный/интерфейс)
+  isHidden       Boolean  @default(false) // скрыт ли плагин
+  hiddenReason   String? // причина скрытия/ограничения доступа
+
+  releases PluginRelease[]
+  stars    PluginStar[]
+
+  forkOrigin Plugin?  @relation("PluginFork", fields: [forkOriginId], references: [id])
+  forks      Plugin[] @relation("PluginFork")
+
+  dependentPlugins PluginDependency[] @relation("DependencyPlugin")
+  dependencies     PluginDependency[] @relation("DependentPlugin")
+}
+
+model PluginDependency {
+  id                 String   @id @default(uuid())
+  dependentPluginId  String // тот плагин который зависит от этого
+  dependencyPluginId String // плагин от которого зависит этот
+  version            String? // минимальная версия зависимости
+  createdAt          DateTime @default(now())
+
+  dependentPlugin  Plugin @relation("DependentPlugin", fields: [dependentPluginId], references: [id], onDelete: Cascade)
+  dependencyPlugin Plugin @relation("DependencyPlugin", fields: [dependencyPluginId], references: [id], onDelete: Cascade)
+
+  @@unique([dependentPluginId, dependencyPluginId])
+  @@index([dependentPluginId])
+  @@index([dependencyPluginId])
+}
+
+model PluginRelease {
+  id           String   @id @default(uuid())
+  version      String
+  releaseNotes String?
+  file         String
+  releaseHash  String   @unique
+  reactions    Json     @default("{}")
+  downloads    Int      @default(0)
+  pluginId     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  plugin Plugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+
+  @@unique([pluginId, version])
+}
+
+model PluginStar {
+  id        String   @id @default(uuid())
+  userId    String
+  pluginId  String
+  createdAt DateTime @default(now())
+
+  plugin Plugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pluginId])
+  @@index([userId])
+  @@index([pluginId])
+}
