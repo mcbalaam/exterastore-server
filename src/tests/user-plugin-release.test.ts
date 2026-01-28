@@ -13,7 +13,7 @@ import fs from "fs"
 import {
   create as createUser,
   remove as removeUser,
-} from "../services/userService";
+} from "../services/user-service/src";
 import {
   createPlugin,
   deletePlugin,

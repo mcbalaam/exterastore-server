@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import { Elysia } from "elysia";
 import { pluginsGetHandler } from "../api/routes/plugins";
 
-import { create, remove } from "../services/userService";
+import { create, remove } from "../services/user-service/src";
 import {
   createPlugin,
   getPluginById,

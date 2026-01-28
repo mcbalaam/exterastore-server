@@ -18,7 +18,7 @@ import {
   updatePreferences,
   checkUsernameExists,
   getUserStars,
-} from "../../services/userService";
+} from "../../services/user-service/src";
 
 export const usersRegisterHandler = async ({ body, set }: Context) => {
   try {
